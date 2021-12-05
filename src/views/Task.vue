@@ -1,19 +1,42 @@
 <template>
-  <section>
+  <section v-if="task">
     <md-toolbar>
-      <h1 class="md-title" style="flex: 1; text-align: left">{{ getTaskById(id).title }}</h1>
-      <i :class="`task__text--${getTaskById(id).className}`">{{ status[getTaskById(id).status.title] }}</i>
-      <md-button class="task__btn">Редактировать</md-button>
+      <h1 class="md-title" style="flex: 1; text-align: left">{{ task.title }}</h1>
+      <i :class="`task__text--${task.className}`">{{ task.status.title }}</i>
+      <md-button class="task__btn" @click="showEditModal">Редактировать</md-button>
     </md-toolbar>
     <md-content class="container task__container">
-      <strong>{{ getTaskById(id).message }}</strong>
+      <strong>{{ task.message }}</strong>
     </md-content>
+    <md-dialog :md-active.sync="isEditModalShow">
+      <md-card class="card">
+        <md-card-content>
+          <md-field :class="messageClass">
+            <label>Заголовок</label>
+            <md-input v-model="localTask.title" required @input="error = ''"></md-input>
+            <span class="md-error">There is an error</span>
+          </md-field>
+          <md-field :class="messageClass">
+            <label>Описание</label>
+            <md-textarea v-model="localTask.message" required></md-textarea>
+            <span class="md-error">Поле должно быть заполнено</span>
+          </md-field>
+          <span v-if="error" class="error">{{ error }}</span>
+        </md-card-content>
+
+        <md-card-actions>
+          <md-button @click="isEditModalShow = false">Отменить</md-button>
+          <md-button @click="saveTask">Сохранить</md-button>
+        </md-card-actions>
+      </md-card>
+    </md-dialog>
+  </section>
+  <section v-else>
+    <md-progress-spinner md-mode="indeterminate" class="spinner"></md-progress-spinner>
   </section>
 </template>
 
 <script>
-import { mapState, mapGetters } from 'vuex';
-
 export default {
   name: 'Task',
   props: {
@@ -26,18 +49,43 @@ export default {
         active: 'В работе',
         overdue: 'Просрочено',
       },
+      isEditModalShow: false,
+      error: '',
+      task: null,
+      localTask: {},
     };
   },
-  computed: {
-    ...mapState(['tasks']),
-    ...mapGetters(['getTaskById']),
+  async mounted() {
+    try {
+      const { data } = await this.$api.post(`request/show/${this.id}`);
+      if (data.error) {
+        this.$router.push({ name: 'TasksList' });
+      }
+      this.task = data.data;
+    } catch (error) {
+      console.error(error);
+    }
   },
   methods: {
-    changeTitle(title) {
-      this.getTask.name = title;
+    showEditModal() {
+      this.isEditModalShow = true;
+      this.localTask = { ...this.task };
     },
-    changeDescription(description) {
-      this.getTask.description = description;
+    async saveTask() {
+      const backup = { ...this.task };
+      this.isEditModalShow = false;
+      this.task = { ...this.localTask };
+      try {
+        const { data } = await this.$api.post(`request/edit/${this.id}`, {
+          title: this.task.title,
+          message: this.task.message,
+        });
+        if (data.error) {
+          this.task = backup;
+        }
+      } catch (error) {
+        this.task = backup;
+      }
     },
   },
 };
@@ -75,5 +123,8 @@ export default {
       color: #db545a;
     }
   }
+}
+.spinner {
+  margin: 200px auto 0;
 }
 </style>

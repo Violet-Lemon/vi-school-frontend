@@ -80,7 +80,8 @@ export default {
           this.error = response.data.message;
           return;
         }
-        console.log(response);
+        this.isSignUp = false;
+        this.email = this.signUp.email;
       } catch (error) {
         this.error = 'Ошибка подключения к серверу.';
         console.error(error);
