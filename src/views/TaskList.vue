@@ -18,20 +18,29 @@
         <md-card-content>
           <md-field :class="messageClass">
             <label>Заголовок</label>
-            <md-input v-model="title" required @input="error = ''"></md-input>
-            <span class="md-error">There is an error</span>
+            <md-input v-model="title" required @input="deleteErrors"></md-input>
           </md-field>
+          <span class="error" v-if="titleError">{{ titleError }}</span>
           <md-field :class="messageClass">
             <label>Описание</label>
-            <md-textarea v-model="message" required></md-textarea>
-            <span class="md-error">Поле должно быть заполнено</span>
+            <md-textarea v-model="message" required @input="deleteErrors"></md-textarea>
           </md-field>
-          <span v-if="error" class="error">{{ error }}</span>
+          <span class="error" v-if="messageError">{{ messageError }}</span>
         </md-card-content>
 
         <md-card-actions>
-          <md-button @click="isCreateModalShow = false">Отменить</md-button>
+          <md-button @click="cancel">Отменить</md-button>
           <md-button @click="createTask">Создать задачу</md-button>
+        </md-card-actions>
+      </md-card>
+    </md-dialog>
+    <md-dialog :md-active.sync="isDeletingError">
+      <md-card>
+        <md-card-content>
+          {{ deletingError }}
+        </md-card-content>
+        <md-card-actions>
+          <md-button @click="isDeletingError = false">ОК</md-button>
         </md-card-actions>
       </md-card>
     </md-dialog>
@@ -49,6 +58,10 @@ export default {
       title: '',
       message: '',
       error: '',
+      titleError: '',
+      messageError: '',
+      deletingError: '',
+      isDeletingError: false,
     };
   },
   mounted() {
@@ -69,13 +82,25 @@ export default {
     },
     validateForm() {
       let isValid = true;
-
-      if (!this.title || !this.message) {
-        this.error = 'Заполните обязательные поля';
+      if (!this.title) {
+        this.titleError = 'Заполните заголовок';
         isValid = false;
       }
-
+      if (!this.message) {
+        this.messageError = 'Заполните описание';
+        isValid = false;
+      }
       return isValid;
+    },
+    deleteErrors() {
+      this.titleError = '';
+      this.messageError = '';
+    },
+    cancel() {
+      this.isCreateModalShow = false;
+      this.deleteErrors();
+      this.title = '';
+      this.message = '';
     },
     async createTask() {
       if (!this.validateForm()) return;
@@ -95,7 +120,12 @@ export default {
     },
     async deleteTask(id) {
       try {
-        await this.$api.post(`request/delete/${id}`);
+        const response = await this.$api.post(`request/delete/${id}`);
+        if (response.data.error) {
+          this.deletingError = 'Удалить заявку может только создатель';
+          this.isDeletingError = true;
+          return;
+        }
         this.getTasks();
       } catch (error) {
         console.error(error);

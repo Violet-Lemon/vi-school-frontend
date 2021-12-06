@@ -77,14 +77,18 @@ export default {
         this.error = '';
         const response = await this.$api.post('registration', this.signUp);
         if (response.data.error) {
-          this.error = response.data.message;
-          return;
+          if (response.data.message === 'Пользователь с таким email уже существует.') {
+            this.error = response.data.message;
+            return;
+          } else {
+            this.error = 'Для регистрации необходимо заполнить все поля';
+            return;
+          }
         }
         this.isSignUp = false;
         this.email = this.signUp.email;
       } catch (error) {
         this.error = 'Ошибка подключения к серверу.';
-        console.error(error);
       }
     },
     async loginMethod() {
@@ -94,8 +98,9 @@ export default {
           email: this.email,
           password: this.password,
         });
-        if (response.data.error) {
-          this.error = response.data.message;
+        if (response.data.message === 'Bad credentials.') {
+          this.error = 'Для входа заполните верные Email и пароль';
+          return;
         }
         cookies.set('token', response.data.data);
         this.$router.push({ name: 'TasksList' });
@@ -111,10 +116,11 @@ export default {
 <style lang="scss" scoped>
 .card {
   max-width: 400px;
-  margin: 100px auto;
+  margin: 100px auto 0;
 
   &.error {
     color: red;
+    margin-top: 0;
   }
 }
 </style>

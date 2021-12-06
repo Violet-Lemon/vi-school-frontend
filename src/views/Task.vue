@@ -13,19 +13,18 @@
         <md-card-content>
           <md-field :class="messageClass">
             <label>Заголовок</label>
-            <md-input v-model="localTask.title" required @input="error = ''"></md-input>
-            <span class="md-error">There is an error</span>
+            <md-input v-model="localTask.title" required @input="deleteErrors"></md-input>
           </md-field>
+          <span class="error" v-if="titleError">{{ titleError }}</span>
           <md-field :class="messageClass">
             <label>Описание</label>
-            <md-textarea v-model="localTask.message" required></md-textarea>
-            <span class="md-error">Поле должно быть заполнено</span>
+            <md-textarea v-model="localTask.message" required @input="deleteErrors"></md-textarea>
           </md-field>
-          <span v-if="error" class="error">{{ error }}</span>
+          <span class="error" v-if="messageError">{{ messageError }}</span>
         </md-card-content>
 
         <md-card-actions>
-          <md-button @click="isEditModalShow = false">Отменить</md-button>
+          <md-button @click="cancel">Отменить</md-button>
           <md-button @click="saveTask">Сохранить</md-button>
         </md-card-actions>
       </md-card>
@@ -53,6 +52,8 @@ export default {
       error: '',
       task: null,
       localTask: {},
+      titleError: '',
+      messageError: '',
     };
   },
   async mounted() {
@@ -67,11 +68,32 @@ export default {
     }
   },
   methods: {
+    validateForm() {
+      let isValid = true;
+      if (!this.localTask.title) {
+        this.titleError = 'Заполните заголовок';
+        isValid = false;
+      }
+      if (!this.localTask.message) {
+        this.messageError = 'Заполните описание';
+        isValid = false;
+      }
+      return isValid;
+    },
+    deleteErrors() {
+      this.titleError = '';
+      this.messageError = '';
+    },
+    cancel() {
+      this.isEditModalShow = false;
+      this.deleteErrors();
+    },
     showEditModal() {
       this.isEditModalShow = true;
       this.localTask = { ...this.task };
     },
     async saveTask() {
+      if (!this.validateForm()) return;
       const backup = { ...this.task };
       this.isEditModalShow = false;
       this.task = { ...this.localTask };
@@ -126,5 +148,9 @@ export default {
 }
 .spinner {
   margin: 200px auto 0;
+}
+
+.error {
+  color: red;
 }
 </style>
