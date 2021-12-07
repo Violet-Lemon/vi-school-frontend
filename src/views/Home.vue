@@ -81,7 +81,7 @@ export default {
             this.error = response.data.message;
             return;
           } else {
-            this.error = 'Для регистрации необходимо заполнить все поля';
+            this.error = 'Для регистрации необходимо корректно заполнить все поля';
             return;
           }
         }
