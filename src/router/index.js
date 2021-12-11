@@ -6,6 +6,7 @@ import Task from '@/views/Task.vue';
 import Analytics from '@/views/Analytics.vue';
 import notFound from '@/views/notFound';
 import cookies from 'js-cookie';
+import { NAMES } from './constants';
 
 Vue.use(VueRouter);
 
@@ -16,7 +17,7 @@ const routes = [
   },
   {
     path: '/',
-    name: 'Home',
+    name: NAMES.HOME,
     component: Home,
     meta: {
       breadcrumb: [{ name: 'Главная' }],
@@ -56,11 +57,11 @@ const router = new VueRouter({
 router.beforeEach((to, from, next) => {
   if (cookies.get('token')) {
     router.app.$api.defaults.headers.common['Authorization'] = 'Bearer ' + cookies.get('token');
-    if (to.name === 'Home') {
+    if (to.name === NAMES.HOME) {
       next({ name: 'TasksList' });
     }
-  } else if (to.name !== 'Home') {
-    next({ name: 'Home' });
+  } else if (to.name !== NAMES.HOME) {
+    next({ name: NAMES.HOME });
   }
   next();
 });

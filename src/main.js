@@ -18,6 +18,8 @@ const api = axios.create({
 
 Vue.prototype.$api = api;
 
+Vue.prototype.$bus = new Vue();
+
 const classMap = ['waiting', 'active', 'done'];
 
 const store = new Vuex.Store({

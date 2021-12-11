@@ -14,13 +14,13 @@
           <md-field :class="messageClass">
             <label>Заголовок</label>
             <md-input v-model="localTask.title" required @input="deleteErrors"></md-input>
+            <span class="md-error">{{ titleError }}</span>
           </md-field>
-          <span class="error" v-if="titleError">{{ titleError }}</span>
           <md-field :class="messageClass">
             <label>Описание</label>
             <md-textarea v-model="localTask.message" required @input="deleteErrors"></md-textarea>
+            <span class="md-error">{{ messageError }}</span>
           </md-field>
-          <span class="error" v-if="messageError">{{ messageError }}</span>
         </md-card-content>
 
         <md-card-actions>
@@ -67,15 +67,25 @@ export default {
       console.error(error);
     }
   },
+  computed: {
+    messageClass() {
+      return {
+        'md-invalid': this.error,
+      };
+    },
+  },
   methods: {
     validateForm() {
       let isValid = true;
+      this.error = false;
       if (!this.localTask.title) {
         this.titleError = 'Заполните заголовок';
+        this.error = true;
         isValid = false;
       }
       if (!this.localTask.message) {
         this.messageError = 'Заполните описание';
+        this.error = true;
         isValid = false;
       }
       return isValid;

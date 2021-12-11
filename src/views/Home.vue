@@ -104,6 +104,7 @@ export default {
         }
         cookies.set('token', response.data.data);
         this.$router.push({ name: 'TasksList' });
+        this.$bus.$emit('login');
       } catch (error) {
         this.error = 'Ошибка подключения к серверу.';
         console.error(error);
